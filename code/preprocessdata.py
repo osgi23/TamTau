@@ -4,7 +4,7 @@ import numpy as np
 from tensorflow.keras.preprocessing import image
 from tensorflow.keras.applications.resnet50 import preprocess_input
 
-# Kích thước ảnh chuẩn cho ResNet50
+# Kích thước ảnh chuẩn cho ResNet50 để có thể dùng cho sprint sau
 IMG_SIZE = (224, 224)
 
 def get_image_paths(root_path):
