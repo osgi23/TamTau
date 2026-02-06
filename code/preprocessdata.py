@@ -9,14 +9,13 @@ IMG_SIZE = (224, 224)
 
 def get_image_paths(root_path):
     image_paths = []
-
-    search_pattern = os.path.join(root_path, '*', '*.jpg') 
-    image_paths = glob.glob(search_pattern)
-
-    for ext in ['*.jpeg', '*.png']:
-        image_paths.extend(glob.glob(os.path.join(root_path, '*', ext)))
+    # Quét tất cả file trong các subfolder
+    for ext in ('*.jpg', '*.jpeg', '*.png', '*.JPG'):
+        # Dùng ** để tìm kiếm sâu nếu cần, hoặc cấu trúc '*' như bạn đang dùng
+        pattern = os.path.join(root_path, '*', ext)
+        image_paths.extend(glob.glob(pattern))
     
-    print(f"Đã tìm thấy tổng cộng {len(image_paths)} ảnh ")
+    print(f"Đã tìm thấy tổng cộng {len(image_paths)} ảnh.")
     return sorted(image_paths)
 
 # cần sửa và hoàn thiện hàm này
@@ -48,9 +47,9 @@ if __name__ == "__main__":
     
     # 2. Test thử ảnh đầu tiên tìm được
     if len(paths) > 0:
-        print(f"\nVí dụ ảnh đầu tiên: {paths[0]}")
+        print(f"\nVí dụ ảnh đầu tiên: {paths[2]}")
         # Thử xử lý ảnh đó
-        img_vector = load_and_preprocess_image(paths[0])
+        img_vector = load_and_preprocess_image(paths[2])
         if img_vector is not None:
             print(f"Shape đầu ra: {img_vector.shape}")
     else:
