@@ -4,6 +4,7 @@ from tensorflow.keras.models import Model
 from tensorflow.keras.layers import GlobalAveragePooling2D
 import preprocessdata as pp  
 import os
+import pickle
 # 1. Khởi tạo model ResNet50
 def get_feature_extractor():
     # include_top=False: Bỏ lớp phân loại, chỉ lấy khung xương để trích xuất đặc trưng
@@ -16,41 +17,55 @@ def get_feature_extractor():
 
 # 2. Hàm trích xuất 
 def extract_features_in_memory(dataset_path):
-    # Lấy danh sách ảnh
     image_paths = pp.get_image_paths(dataset_path)
-    
+    if len(image_paths) == 0: return np.array([]), np.array([]), np.array([])
+
     model = get_feature_extractor()
     
     features_list = []
     valid_paths = [] 
     labels_list = []
-    print(f"Bắt đầu trích xuất đặc trưng cho {len(image_paths)} ảnh...")
+    
+    # Gom ảnh vào một danh sách tạm
+    temp_images = []
+    
+    print(f"Bắt đầu trích xuất bằng GPU cho {len(image_paths)} ảnh...")
     
     for idx, path in enumerate(image_paths):
-        # Xử lý ảnh
-        label = os.path.basename(os.path.dirname(path))
-        img_preprocessed = pp.load_and_preprocess_image(path)
-        
-        if img_preprocessed is not None:
-            feature = model.predict(img_preprocessed, verbose=0)  
-            # Flatten
-            features_list.append(feature.flatten())
+        img_pre = pp.load_and_preprocess_image(path)
+        if img_pre is not None:
+            temp_images.append(img_pre[0]) # Lấy array ảnh (224, 224, 3)
             valid_paths.append(path)
-            labels_list.append(label)
-        # In tiến độ 
-        if (idx + 1) % 50 == 0:
-            print(f"-> Đã xong {idx + 1} ảnh...")
+            labels_list.append(os.path.basename(os.path.dirname(path)))
+        
+        # Khi đủ một "Batch" (ví dụ 32 ảnh) thì đẩy lên GPU một lần
+        if len(temp_images) == 128 or (idx == len(image_paths) - 1 and len(temp_images) > 0):
+            batch_array = np.array(temp_images)
+            # GPU xử lý song song cả batch ở đây
+            batch_features = model.predict(batch_array, verbose=0)
+            features_list.append(batch_features)
+            temp_images = [] # Reset batch tạm
+            
+            if (idx + 1) % 64 == 0 or idx == len(image_paths) - 1:
+                print(f"-> Đã xử lý: {idx + 1}/{len(image_paths)} ảnh...")
 
-    return np.array(features_list), np.array(valid_paths), np.array(labels_list)
+    return np.vstack(features_list), np.array(valid_paths), np.array(labels_list)
 # ouput của resnet50 là 7x7x2048 sau khi qua globalaveragepooling2d sẽ thành 2048 sau đó flatten thành 2048
 # --- CHẠY THỬ (TEST) ---
+import pickle
+
+# --- SAU KHI CHẠY XONG HÀM TRÍCH XUẤT ---
 if __name__ == "__main__":
-    dataset_folder = r"D:\duan1\TamTau\dataset"
-    
-    # Gọi hàm và hứng lấy dữ liệu vào biến
-    vectors, paths,labels = extract_features_in_memory(dataset_folder)
-    
-    # Kiểm tra nhanh
+    dataset_folder = r"D:\Similar_Image_Finder\dataset"
+    vectors, paths, labels = extract_features_in_memory(dataset_folder)
+
     if len(vectors) > 0:
-        print(f"Vector đầu tiên có {len(vectors[0])} chiều.") # Kết quả phải là 2048
-        print(f" - Tên : {labels[0]}")
+        # Lưu vào file pickle
+        data_to_save = {
+            "vectors": vectors,
+            "paths": paths,
+            "labels": labels
+        }
+        with open("feature_data.pkl", "wb") as f:
+            pickle.dump(data_to_save, f)
+        print("--- Đã lưu dữ liệu vào file feature_data.pkl ---")

@@ -10,7 +10,7 @@ IMG_SIZE = (224, 224)
 def get_image_paths(root_path):
     image_paths = []
     # Quét tất cả file trong các subfolder
-    for ext in ('*.jpg'):
+    for ext in ['*.jpg']:
         pattern = os.path.join(root_path, '*', ext)
         image_paths.extend(glob.glob(pattern))
     
@@ -38,7 +38,7 @@ def load_and_preprocess_image(image_path):
 # --- CHẠY THỬ ---
 if __name__ == "__main__":
 
-    dataset_folder = r"D:\duan1\TamTau\dataset" 
+    dataset_folder = r"D:\Similar_Image_Finder\dataset" 
     
     # 1. Lấy danh sách
     paths = get_image_paths(dataset_folder)
