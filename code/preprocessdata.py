@@ -10,15 +10,13 @@ IMG_SIZE = (224, 224)
 def get_image_paths(root_path):
     image_paths = []
     # Quét tất cả file trong các subfolder
-    for ext in ('*.jpg', '*.jpeg', '*.png', '*.JPG'):
-        # Dùng ** để tìm kiếm sâu nếu cần, hoặc cấu trúc '*' như bạn đang dùng
+    for ext in ('*.jpg'):
         pattern = os.path.join(root_path, '*', ext)
         image_paths.extend(glob.glob(pattern))
     
     print(f"Đã tìm thấy tổng cộng {len(image_paths)} ảnh.")
     return sorted(image_paths)
 
-# cần sửa và hoàn thiện hàm này
 def load_and_preprocess_image(image_path):
 
     try:
@@ -33,7 +31,7 @@ def load_and_preprocess_image(image_path):
         img_processed = preprocess_input(img_array)
         
         return img_processed
-    except Exception as e:
+    except Exception as e: # Nếu ảnh bị lỗi đọc hoặc xử lý, in lỗi và trả về None
         print(f"Lỗi đọc file {image_path}: {e}")
         return None
 
